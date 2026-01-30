@@ -7,18 +7,17 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
-{
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
-  /* Configure the system clock */
-  SystemClock_Config();
-
-  while (1)
-  {
- 
-  }
-  return -1;
+int main(void) {
+    HAL_Init();
+    SystemClock_Config();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9, GPIO_MODE_OUTPUT_PP, GPIO_SPEED_FREQ_LOW, GPIO_NOPULL};
+    HAL_GPIO_Init(GPIOC, &initStr);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+    while(1) {
+        HAL_Delay(200);
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+    }
 }
 
 /**
