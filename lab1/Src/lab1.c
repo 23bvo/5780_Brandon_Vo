@@ -1,6 +1,5 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
-
 void SystemClock_Config(void);
 
 /**
@@ -20,6 +19,43 @@ int main(void) {
     }
 }
 
+ int mainButton(void)
+{
+    HAL_Init();
+    SystemClock_Config();
+
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+
+
+    GPIO_InitTypeDef initStr = {0};
+    initStr.Pin = GPIO_PIN_8 | GPIO_PIN_9;
+    initStr.Mode = GPIO_MODE_OUTPUT_PP;
+    initStr.Pull = GPIO_NOPULL;
+    initStr.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOC, &initStr);
+
+    initStr.Pin = GPIO_PIN_13;
+    initStr.Mode = GPIO_MODE_INPUT;
+    initStr.Pull = GPIO_PULLUP;   // PC13 needs pull-up
+    HAL_GPIO_Init(GPIOC, &initStr);
+
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
+
+    uint8_t lastButtonState = 1;
+
+    while (1)
+    {
+        uint8_t buttonState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+        if (lastButtonState == 1 && buttonState == 0)
+        {
+            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+            HAL_Delay(50); // debounce
+        }
+        lastButtonState = buttonState;
+    }
+}
+ 
 /**
   * @brief System Clock Configuration
   * @retval None
