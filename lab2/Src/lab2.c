@@ -13,7 +13,10 @@ int main(void)
   HAL_Init();
   /* Configure the system clock */
   SystemClock_Config();
-
+   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_SYSCFG_CLK_ENABLE();
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
   while (1)
   {
  
