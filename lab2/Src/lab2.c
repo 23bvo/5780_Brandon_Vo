@@ -22,10 +22,18 @@ int main(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-   GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  EXTI->IMR  |= EXTI_IMR_IM0;
+  EXTI->RTSR |= EXTI_RTSR_RT0;
+  SYSCFG->EXTICR[0] &= ~SYSCFG_EXTICR1_EXTI0;
+  SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI0_PA;
+  NVIC_EnableIRQ(EXTI0_1_IRQn);
+  NVIC_SetPriority(EXTI0_1_IRQn, 1);
+  NVIC_SetPriority(SysTick_IRQn, 2);
+
   while (1)
   {
  
