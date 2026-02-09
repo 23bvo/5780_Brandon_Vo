@@ -18,7 +18,7 @@ int main(void) {
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
     }
 }
-
+/** 
  int mainButton(void)
 {
     HAL_Init();
@@ -55,7 +55,7 @@ int main(void) {
         lastButtonState = buttonState;
     }
 }
- 
+ */
 /**
   * @brief System Clock Configuration
   * @retval None
