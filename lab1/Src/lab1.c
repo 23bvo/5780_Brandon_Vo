@@ -12,10 +12,20 @@ int main(void) {
     __HAL_RCC_GPIOC_CLK_ENABLE();
     GPIO_InitTypeDef initStr = {GPIO_PIN_6 | GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_SPEED_FREQ_LOW, GPIO_NOPULL};
     HAL_GPIO_Init(GPIOC, &initStr);
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    GPIO_InitTypeDef buttonInit = {GPIO_PIN_0,GPIO_MODE_INPUT,GPIO_PULLDOWN};
+    HAL_GPIO_Init(GPIOA, &buttonInit);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
-    while(1) {
-        HAL_Delay(200);
-        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6 | GPIO_PIN_7);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+    uint8_t lastButtonState = 0;
+
+    while (1) {
+        uint8_t currentButtonState = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+        if (currentButtonState == GPIO_PIN_SET && lastButtonState == GPIO_PIN_RESET) {
+            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6 | GPIO_PIN_7);
+            HAL_Delay(50); 
+        }
+        lastButtonState = currentButtonState;
     }
 }
 /** 
