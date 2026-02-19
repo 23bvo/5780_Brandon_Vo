@@ -2,7 +2,7 @@
 #include "stm32f0xx_hal.h"
 
 void SystemClock_Config(void);
-
+volatile uint8_t OG_LED_state = 0;
 /**
   * @brief  The application entry point.
   * @retval int
@@ -24,12 +24,14 @@ int main(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
   GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  EXTI->RTSR &= ~EXTI_RTSR_RT0;
+  EXTI->FTSR |= EXTI_FTSR_FT0;
   EXTI->IMR  |= EXTI_IMR_IM0;
-  EXTI->RTSR |= EXTI_RTSR_RT0;
   SYSCFG->EXTICR[0] &= ~SYSCFG_EXTICR1_EXTI0;
   SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI0_PA;
+  EXTI->PR = EXTI_PR_PR0;   // Clear any stale pending flag
   NVIC_EnableIRQ(EXTI0_1_IRQn);
   NVIC_SetPriority(EXTI0_1_IRQn, 1);
   NVIC_SetPriority(SysTick_IRQn, 2);
@@ -41,6 +43,23 @@ int main(void)
   }
   return -1;
 }
+void EXTI0_1_IRQHandler(void)
+{
+    if (OG_LED_state == 0)
+    {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET); 
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET); 
+        OG_LED_state = 1;
+    }
+    else
+    {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
+        OG_LED_state = 0;
+    }
+    EXTI->PR = EXTI_PR_PR0;
+}
+
 
 /**
   * @brief System Clock Configuration
