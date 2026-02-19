@@ -33,7 +33,7 @@ int main(void)
   SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI0_PA;
   EXTI->PR = EXTI_PR_PR0;   // Clear any stale pending flag
   NVIC_EnableIRQ(EXTI0_1_IRQn);
-  NVIC_SetPriority(EXTI0_1_IRQn, 1);
+  NVIC_SetPriority(EXTI0_1_IRQn, 3);
   NVIC_SetPriority(SysTick_IRQn, 2);
 
   while (1)
@@ -45,18 +45,14 @@ int main(void)
 }
 void EXTI0_1_IRQHandler(void)
 {
-    if (OG_LED_state == 0)
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET); 
+    for (volatile uint32_t i = 0; i < 1500000; i++)
     {
-        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET); 
-        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET); 
-        OG_LED_state = 1;
+        // do nothing
     }
-    else
-    {
-        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
-        OG_LED_state = 0;
-    }
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
     EXTI->PR = EXTI_PR_PR0;
 }
 
