@@ -29,6 +29,15 @@ void TIM2_Init_4Hz(void)
     NVIC_EnableIRQ(TIM2_IRQn);
     TIM2->CR1 |= TIM_CR1_CEN;
 }
+void TIM2_IRQHandler(void)
+{
+    if (TIM2->SR & TIM_SR_UIF)
+    {
+        TIM2->SR &= ~TIM_SR_UIF; 
+        GPIOC->ODR ^= (1 << 8);
+        GPIOC->ODR ^= (1 << 9);
+    }
+}
 /**
   * @brief System Clock Configuration
   * @retval None
