@@ -73,6 +73,16 @@ void TIM3_PWM_Init(void)
     TIM3->CCR2 = 2;
     TIM3->CR1 |= TIM_CR1_CEN;
 }
+void GPIO_PWM_Init(void)
+{
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+    GPIOC->MODER &= ~(3 << (6*2));
+    GPIOC->MODER &= ~(3 << (7*2));
+    GPIOC->MODER |=  (2 << (6*2));
+    GPIOC->MODER |=  (2 << (7*2));
+    GPIOC->AFR[0] &= ~(0xF << (6*4));
+    GPIOC->AFR[0] &= ~(0xF << (7*4));
+}
 /**
   * @brief System Clock Configuration
   * @retval None
