@@ -38,6 +38,14 @@ void TIM2_IRQHandler(void)
         GPIOC->ODR ^= (1 << 9);
     }
 }
+void GPIO_LED_Init(void)
+{
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+    GPIOC->MODER &= ~(3 << (8*2));
+    GPIOC->MODER &= ~(3 << (9*2));
+    GPIOC->MODER |=  (1 << (8*2));
+    GPIOC->MODER |=  (1 << (9*2));
+}
 /**
   * @brief System Clock Configuration
   * @retval None
