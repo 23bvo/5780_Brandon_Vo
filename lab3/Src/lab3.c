@@ -83,6 +83,13 @@ void GPIO_PWM_Init(void)
     GPIOC->AFR[0] &= ~(0xF << (6*4));
     GPIOC->AFR[0] &= ~(0xF << (7*4));
 }
+void TIM3_SetDuty(uint16_t percent)
+{
+    if (percent > 100) percent = 100;
+    uint16_t value = (TIM3->ARR * percent) / 100;
+    TIM3->CCR1 = value;
+    TIM3->CCR2 = value;
+}
 /**
   * @brief System Clock Configuration
   * @retval None
