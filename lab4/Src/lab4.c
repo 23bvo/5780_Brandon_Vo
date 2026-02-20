@@ -21,6 +21,19 @@ int main(void)
   return -1;
 }
 
+void USART1_Init(void)
+{
+    RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+    RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+    GPIOA->MODER &= ~(GPIO_MODER_MODER9 | GPIO_MODER_MODER10);
+    GPIOA->MODER |=  (GPIO_MODER_MODER9_1 | GPIO_MODER_MODER10_1);
+    GPIOA->AFR[1] &= ~((0xF << 4) | (0xF << 8));   
+    GPIOA->AFR[1] |=  (1 << 4) | (1 << 8);         
+    USART1->CR1 &= ~USART_CR1_UE;
+    USART1->BRR = 8000000 / 9600;   // = 833
+    USART1->CR1 |= USART_CR1_TE | USART_CR1_RE;
+    USART1->CR1 |= USART_CR1_UE;
+}
 /**
   * @brief System Clock Configuration
   * @retval None

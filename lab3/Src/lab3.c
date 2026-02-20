@@ -19,7 +19,16 @@ int main(void)
   TIM3_PWM_Init();
   while (1)
   {
- 
+    for (int i = 0; i <= 100; i++)
+    {
+        TIM3_SetDuty(i);
+        for (volatile int d = 0; d < 500; d++); // crude delay
+    }
+    for (int i = 100; i >= 0; i--)
+    {
+        TIM3_SetDuty(i);
+        for (volatile int d = 0; d < 500; d++);
+    }
   }
   return -1;
 }
@@ -87,7 +96,7 @@ void TIM3_SetDuty(uint16_t percent)
 {
     if (percent > 100) percent = 100;
     uint16_t value = (TIM3->ARR * percent) / 100;
-    TIM3->CCR1 = value;
+    TIM3->CCR1 = TIM3->ARR - value;
     TIM3->CCR2 = value;
 }
 /**
