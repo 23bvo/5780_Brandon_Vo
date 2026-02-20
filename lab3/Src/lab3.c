@@ -20,7 +20,15 @@ int main(void)
   }
   return -1;
 }
-
+void TIM2_Init_4Hz(void)
+{
+    RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+    TIM2->PSC = 7999;      // (PSC+1) = 8000
+    TIM2->ARR = 250;       // 250 counts = 4 Hz
+    TIM2->DIER |= TIM_DIER_UIE;
+    NVIC_EnableIRQ(TIM2_IRQn);
+    TIM2->CR1 |= TIM_CR1_CEN;
+}
 /**
   * @brief System Clock Configuration
   * @retval None
