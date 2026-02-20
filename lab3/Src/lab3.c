@@ -13,7 +13,10 @@ int main(void)
   HAL_Init();
   /* Configure the system clock */
   SystemClock_Config();
-
+  GPIO_LED_Init(); //orange and green
+  TIM2_Init_4Hz();
+  GPIO_PWM_Init(); //red and blue
+  TIM3_PWM_Init();
   while (1)
   {
  
@@ -33,9 +36,15 @@ void TIM2_IRQHandler(void)
 {
     if (TIM2->SR & TIM_SR_UIF)
     {
-        TIM2->SR &= ~TIM_SR_UIF; 
-        GPIOC->ODR ^= (1 << 8);
-        GPIOC->ODR ^= (1 << 9);
+        TIM2->SR &= ~TIM_SR_UIF;
+        if (GPIOC->ODR & (1 << 8)) 
+        {
+            GPIOC->BSRR = (1 << (8 + 16)) | (1 << 9);
+        }
+        else 
+        {
+            GPIOC->BSRR = (1 << 8) | (1 << (9 + 16));
+        }
     }
 }
 void GPIO_LED_Init(void)
@@ -45,6 +54,24 @@ void GPIO_LED_Init(void)
     GPIOC->MODER &= ~(3 << (9*2));
     GPIOC->MODER |=  (1 << (8*2));
     GPIOC->MODER |=  (1 << (9*2));
+}
+void TIM3_PWM_Init(void)
+{
+    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+    TIM3->PSC = 999;    
+    TIM3->ARR = 10;     
+    TIM3->CCMR1 &= ~(TIM_CCMR1_OC1M);
+    TIM3->CCMR1 |= (0b111 << 4);   
+    TIM3->CCMR1 &= ~(TIM_CCMR1_OC2M);
+    TIM3->CCMR1 |= (0b110 << 12);  
+    TIM3->CCMR1 |= TIM_CCMR1_OC1PE;
+    TIM3->CCMR1 |= TIM_CCMR1_OC2PE;
+    TIM3->CCER |= TIM_CCER_CC1E;
+    TIM3->CCER |= TIM_CCER_CC2E;
+    // Set 20% duty cycle
+    TIM3->CCR1 = 2;   
+    TIM3->CCR2 = 2;
+    TIM3->CR1 |= TIM_CR1_CEN;
 }
 /**
   * @brief System Clock Configuration
