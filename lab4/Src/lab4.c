@@ -1,6 +1,7 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
 
+char USART1_Read(void);
 void SystemClock_Config(void);
 
 /**
@@ -13,10 +14,25 @@ int main(void)
   HAL_Init();
   /* Configure the system clock */
   SystemClock_Config();
-
+  USART1_Init();
+  LED_Init();
   while (1)
   {
- 
+    USART1_WriteString("CMD!\r\n");
+    char led = USART1_Read();     // light
+    char cmd = USART1_Read();     // what it does
+
+    USART1_Write(led);            // echo
+    USART1_Write(cmd);
+    USART1_WriteString("\r\n");
+    int result = LED_Control(led, cmd);
+    string resultMsg="";
+    resultMsg += led;
+    resultMsg += cmd;
+    if(result == 2)
+    {
+        USART1_WriteString(resultMsg+"\r\n");
+    }
   }
   return -1;
 }
@@ -33,6 +49,86 @@ void USART1_Init(void)
     USART1->BRR = 8000000 / 9600;   // = 833
     USART1->CR1 |= USART_CR1_TE | USART_CR1_RE;
     USART1->CR1 |= USART_CR1_UE;
+}
+void USART1_Write(char c)
+{
+    while (!(USART1->ISR & USART_ISR_TXE));
+    USART1->TDR = c;
+}
+char USART1_Read(void)
+{
+    while (!(USART1->ISR & USART_ISR_RXNE));
+    return USART1->RDR;
+}
+void USART1_WriteString(char *str)
+{
+    while (*str)
+    {
+        USART1_Write(*str++);
+    }
+}
+void LED_Init(void)
+{
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+    GPIOC->MODER &= ~(GPIO_MODER_MODER6 |
+                      GPIO_MODER_MODER7 |
+                      GPIO_MODER_MODER8 |
+                      GPIO_MODER_MODER9);
+    GPIOC->MODER |= (GPIO_MODER_MODER6_0 |
+                     GPIO_MODER_MODER7_0 |
+                     GPIO_MODER_MODER8_0 |
+                     GPIO_MODER_MODER9_0);
+}
+int LED_Control(char c, char cmd)
+{
+    int returnValue = 0;
+    switch(c)
+    {
+        case 'r':
+            pin= GPIO_ODR_6;   // Red
+            returnValue++;
+            break;
+
+        case 'b':
+            pin= GPIO_ODR_7;   // blue
+            returnValue++;
+            break;
+
+        case 'o':
+            pin= GPIO_ODR_8;   // orange
+            returnValue++;
+            break;
+
+        case 'g':
+            pin= GPIO_ODR_9;   // Green
+            returnValue++;
+            break;
+        default:
+           USART1_WriteString("Invalid LED!\r\n");
+            break;
+    }
+    switch(cmd)
+    {
+      case '0':   // OFF
+            GPIOC->ODR &= ~pin;
+            returnValue++;
+            break;
+
+        case '1':   // ON
+            GPIOC->ODR |= pin;
+            returnValue++;
+            break;
+
+        case '2':   // TOGGLE
+            GPIOC->ODR ^= pin;
+            returnValue++;
+            break;
+
+        default:
+            USART1_WriteString("Invalid Command!\r\n");
+            break;
+    }
+    return returnValue;
 }
 /**
   * @brief System Clock Configuration
