@@ -3,7 +3,7 @@
 
 char USART1_Read(void);
 void SystemClock_Config(void);
-
+int LED_Control(char c, char cmd);
 /**
   * @brief  The application entry point.
   * @retval int
@@ -18,20 +18,16 @@ int main(void)
   LED_Init();
   while (1)
   {
-    USART1_WriteString("CMD!\r\n");
+    USART1_WriteString("CMD?\r\n");
     char led = USART1_Read();     // light
     char cmd = USART1_Read();     // what it does
 
-    USART1_Write(led);            // echo
-    USART1_Write(cmd);
-    USART1_WriteString("\r\n");
     int result = LED_Control(led, cmd);
-    string resultMsg="";
-    resultMsg += led;
-    resultMsg += cmd;
     if(result == 2)
     {
-        USART1_WriteString(resultMsg+"\r\n");
+        USART1_Write(led);
+        USART1_Write(cmd);
+        USART1_WriteString("\r\n");
     }
   }
   return -1;
@@ -82,6 +78,7 @@ void LED_Init(void)
 int LED_Control(char c, char cmd)
 {
     int returnValue = 0;
+    uint16_t pin = 0;
     switch(c)
     {
         case 'r':
