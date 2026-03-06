@@ -20,7 +20,25 @@ int main(void)
   }
   return -1;
 }
-
+void GPIO_Init(void)
+{
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+    GPIOB->MODER &= ~(3<<(11*2));
+    GPIOB->MODER &= ~(3<<(13*2));
+    GPIOB->MODER |=  (2<<(11*2));
+    GPIOB->MODER |=  (2<<(13*2));
+    GPIOB->OTYPER |= (1<<11);
+    GPIOB->OTYPER |= (1<<13);
+    GPIOB->AFR[1] &= ~(0xF<<12); 
+    GPIOB->AFR[1] |=  (1<<12);   // PB11
+    GPIOB->AFR[1] &= ~(0xF<<20);
+    GPIOB->AFR[1] |=  (1<<20);   // PB13
+    GPIOB->MODER |= (1<<(14*2));
+    GPIOB->BSRR = (1<<14);
+    GPIOC->MODER |= (1<<(0*2));
+    GPIOC->BSRR = (1<<0);
+}
 /**
   * @brief System Clock Configuration
   * @retval None
