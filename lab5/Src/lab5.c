@@ -13,12 +13,31 @@ int main(void)
   HAL_Init();
   /* Configure the system clock */
   SystemClock_Config();
-
+  GPIO_Init();
+  I2C2_Init();
+  LED_Init();
+  int16_t x, y;
+  uint8_t id = I2C_Read_WHOAMI();
   while (1)
   {
- 
+    if(id == 0xD4)
+  {
+      GPIOC->BSRR = (1 << 9);
+  }
   }
   return -1;
+}
+void LED_Init(void)
+{
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+    GPIOC->MODER &= ~(GPIO_MODER_MODER6 |
+                      GPIO_MODER_MODER7 |
+                      GPIO_MODER_MODER8 |
+                      GPIO_MODER_MODER9);
+    GPIOC->MODER |= (GPIO_MODER_MODER6_0 |
+                     GPIO_MODER_MODER7_0 |
+                     GPIO_MODER_MODER8_0 |
+                     GPIO_MODER_MODER9_0);
 }
 void GPIO_Init(void)
 {
