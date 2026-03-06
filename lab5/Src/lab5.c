@@ -39,6 +39,13 @@ void GPIO_Init(void)
     GPIOC->MODER |= (1<<(0*2));
     GPIOC->BSRR = (1<<0);
 }
+void I2C2_Init(void)
+{
+    RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
+    I2C2->CR1 &= ~I2C_CR1_PE;
+    I2C2->TIMINGR = 0x2000090E;
+    I2C2->CR1 |= I2C_CR1_PE;
+}
 /**
   * @brief System Clock Configuration
   * @retval None
