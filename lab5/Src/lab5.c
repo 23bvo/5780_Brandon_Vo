@@ -46,6 +46,23 @@ void I2C2_Init(void)
     I2C2->TIMINGR = 0x2000090E;
     I2C2->CR1 |= I2C_CR1_PE;
 }
+uint8_t I2C_Read_WHOAMI()
+{
+    uint8_t data;
+    I2C2->CR2 = (0x6B << 1) | (1 << 16); // slave addr + 1 byte
+    I2C2->CR2 &= ~I2C_CR2_RD_WRN;
+    I2C2->CR2 |= I2C_CR2_START;
+    while(!(I2C2->ISR & I2C_ISR_TXIS));
+    I2C2->TXDR = 0x0F;   // WHO_AM_I register
+    while(!(I2C2->ISR & I2C_ISR_TC));
+    I2C2->CR2 = (0x6B << 1) | (1 << 16);
+    I2C2->CR2 |= I2C_CR2_RD_WRN;
+    I2C2->CR2 |= I2C_CR2_START;
+    while(!(I2C2->ISR & I2C_ISR_RXNE));
+    data = I2C2->RXDR;
+    I2C2->CR2 |= I2C_CR2_STOP;
+    return data;
+}
 /**
   * @brief System Clock Configuration
   * @retval None
