@@ -2,7 +2,36 @@
 #include "stm32f0xx_hal.h"
 
 void SystemClock_Config(void);
+void init_adc(void) {
+    // 1. Enable ADC1 in RCC [cite: 616]
+    RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN; // Enable GPIOC for PC0
 
+    // 2. Configure PC0 as Analog mode [cite: 613]
+    GPIOC->MODER |= (3 << (0 * 2)); // PC0 to Analog mode
+
+    // 3. Configure ADC: 8-bit resolution, continuous mode, software trigger [cite: 616]
+    ADC1->CFGR1 |= ADC_CFGR1_CONT; // Continuous conversion mode
+    ADC1->CFGR1 |= (2 << ADC_CFGR1_RES_Pos); // 8-bit resolution
+
+    // 4. Select Channel 10 (for PC0) [cite: 565, 597, 617]
+    ADC1->CHSELR |= ADC_CHSELR_CHSEL10;
+
+    // 5. Self-calibration [cite: 617]
+    ADC1->CR |= ADC_CR_ADCAL;
+    while (ADC1->CR & ADC_CR_ADCAL); // Wait for calibration to finish [cite: 575]
+
+    // 6. Enable and Start ADC [cite: 617]
+    ADC1->CR |= ADC_CR_ADEN;
+    while (!(ADC1->ISR & ADC_ISR_ADRDY)); // Wait until ADC is ready [cite: 577]
+    ADC1->CR |= ADC_CR_ADSTART; // Start conversion [cite: 577]
+}
+
+void init_leds(void) {
+    // Enable GPIO for LEDs (assuming standard Discovery board pins, e.g., GPIOC pins 6-9)
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+    GPIOC->MODER |= (1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2));
+}
 /**
   * @brief  The application entry point.
   * @retval int
@@ -14,9 +43,17 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
-  while (1)
-  {
- 
+  init_leds();
+  init_adc();
+  while (1) {
+      // Read ADC data register (8-bit value: 0-255) [cite: 566, 620]
+      uint8_t val = ADC1->DR;
+
+      // Turn on/off LEDs based on 4 increasing thresholds [cite: 621, 622]
+      if (val > 50)  GPIOC->BSRR = (1 << 7);  else GPIOC->BSRR = (1 << (7 + 16));
+      if (val > 100) GPIOC->BSRR = (1 << 8);  else GPIOC->BSRR = (1 << (8 + 16));
+      if (val > 150) GPIOC->BSRR = (1 << 6);  else GPIOC->BSRR = (1 << (6 + 16));
+      if (val > 200) GPIOC->BSRR = (1 << 9);  else GPIOC->BSRR = (1 << (9 + 16));
   }
   return -1;
 }
