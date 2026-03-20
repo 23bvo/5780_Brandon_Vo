@@ -3,34 +3,34 @@
 
 void SystemClock_Config(void);
 void init_adc(void) {
-    // 1. Enable ADC1 in RCC [cite: 616]
     RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
-    RCC->AHBENR |= RCC_AHBENR_GPIOCEN; // Enable GPIOC for PC0
-
-    // 2. Configure PC0 as Analog mode [cite: 613]
-    GPIOC->MODER |= (3 << (0 * 2)); // PC0 to Analog mode
-
-    // 3. Configure ADC: 8-bit resolution, continuous mode, software trigger [cite: 616]
-    ADC1->CFGR1 |= ADC_CFGR1_CONT; // Continuous conversion mode
-    ADC1->CFGR1 |= (2 << ADC_CFGR1_RES_Pos); // 8-bit resolution
-
-    // 4. Select Channel 10 (for PC0) [cite: 565, 597, 617]
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN; 
+    GPIOC->MODER |= (3 << (0 * 2));
+    ADC1->CFGR1 |= ADC_CFGR1_CONT; 
+    ADC1->CFGR1 |= (2 << ADC_CFGR1_RES_Pos); 
     ADC1->CHSELR |= ADC_CHSELR_CHSEL10;
-
-    // 5. Self-calibration [cite: 617]
     ADC1->CR |= ADC_CR_ADCAL;
-    while (ADC1->CR & ADC_CR_ADCAL); // Wait for calibration to finish [cite: 575]
-
-    // 6. Enable and Start ADC [cite: 617]
+    while (ADC1->CR & ADC_CR_ADCAL); 
     ADC1->CR |= ADC_CR_ADEN;
-    while (!(ADC1->ISR & ADC_ISR_ADRDY)); // Wait until ADC is ready [cite: 577]
-    ADC1->CR |= ADC_CR_ADSTART; // Start conversion [cite: 577]
+    while (!(ADC1->ISR & ADC_ISR_ADRDY)); 
+    ADC1->CR |= ADC_CR_ADSTART; 
 }
 
 void init_leds(void) {
-    // Enable GPIO for LEDs (assuming standard Discovery board pins, e.g., GPIOC pins 6-9)
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
     GPIOC->MODER |= (1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2));
+}
+const uint8_t sine_table[32] = {127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 
+                                232, 216, 197, 175, 151, 127, 102, 78, 56, 37, 21, 9, 
+                                2, 0, 2, 9, 21, 37, 56, 78, 102};
+
+void init_dac(void) {
+    RCC->APB1ENR |= RCC_APB1ENR_DACEN;
+    RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+    GPIOA->MODER |= (3 << (4 * 2));
+    DAC->CR |= DAC_CR_TEN1; 
+    DAC->CR |= (7 << DAC_CR_TSEL1_Pos); 
+    DAC->CR |= DAC_CR_EN1;
 }
 /**
   * @brief  The application entry point.
@@ -43,19 +43,16 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
-  init_leds();
-  init_adc();
-  while (1) {
-      // Read ADC data register (8-bit value: 0-255) [cite: 566, 620]
-      uint8_t val = ADC1->DR;
+  init_dac();
+    int i = 0;
 
-      // Turn on/off LEDs based on 4 increasing thresholds [cite: 621, 622]
-      if (val > 50)  GPIOC->BSRR = (1 << 7);  else GPIOC->BSRR = (1 << (7 + 16));
-      if (val > 100) GPIOC->BSRR = (1 << 8);  else GPIOC->BSRR = (1 << (8 + 16));
-      if (val > 150) GPIOC->BSRR = (1 << 6);  else GPIOC->BSRR = (1 << (6 + 16));
-      if (val > 200) GPIOC->BSRR = (1 << 9);  else GPIOC->BSRR = (1 << (9 + 16));
-  }
-  return -1;
+    while (1) {
+        DAC->DHR8R1 = sine_table[i];
+        DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG1;
+        i = (i + 1) % 32; 
+        for (volatile int d = 0; d < 16000; d++); 
+    }
+    return -1;
 }
 
 /**
